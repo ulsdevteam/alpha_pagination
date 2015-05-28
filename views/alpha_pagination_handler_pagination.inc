@@ -13,7 +13,6 @@
  * @ingroup views_area_handlers
  */
 class alpha_pagination_handler_pagination extends views_handler_area {
-  
   /**
    * Our option default definitions. Exclude the default options.
    */
@@ -29,7 +28,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     );
     return $options;
   }
-  
+
   /**
    * Our options form. Exclude the default options.
    */
@@ -42,18 +41,25 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       '#default_value' => $this->options['pre_letter_path'],
       '#description' => t('This is the path to the view that handles the search by letter. No beginning or ending slashes.'),
     );
-    
+
     // Get an array list of all non-image, non-entity or other assorted reference fields.
     $fields = array('title' => 'title');
-    $result = db_query('SELECT field_name FROM {field_config}
-                       WHERE type = :text_long
-                          OR type = :text_with_summary
-                          OR type = :text
-                       ORDER BY field_name', array(
-                        ':text_long' => 'text_long', ':text_with_summary' => 'text_with_summary',
-                        ':text' => 'text'));
-    while ($fdata = $result->fetchObject()) {
-      $fields[$fdata->field_name] = $fdata->field_name;
+
+    $compound_field_types = array('name');
+    $single_field_types = array('text', 'text_long', 'text_with_summary');
+    $all_field_types = array_merge($single_field_types, $compound_field_types);
+    foreach (field_info_field_map() as $field_name => $field_definition) {
+      if (in_array($field_definition['type'], $all_field_types)) {
+        if (in_array($field_definition['type'], $compound_field_types)) {
+          $field_info = field_info_field($field_name);
+          foreach (array_keys($field_info['columns']) as $compoundFieldKey) {
+            $compound_field_field_name = sprintf('%s:%s', $field_name, $compoundFieldKey);
+            $fields[$compound_field_field_name] = $compound_field_field_name;
+          }
+        } else {
+          $fields[$field_name] = $field_name;
+        }
+      }
     }
     $form['paginate_view_field'] = array(
       '#title' => t('View field to paginate against.'),
@@ -63,11 +69,11 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       '#description' => t('This will be the content field that drives the pagination.'),
     );
   }
-  
+
   /**
    * Extract the SQL query from the query information.
    *
-   * Once extracted, place it into the options array so it is passed to the render 
+   * Once extracted, place it into the options array so it is passed to the render
    * function. This code was lifted nearly verbatim from the views module where the
    * query is constructed for the ui to show the query in the administrative area.
    * I am open to suggestions on how to make this better.
@@ -100,7 +106,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     // Initialize our alphabet array so it can be used regardless of caching.
     $alphabet = range('A', 'Z');
     $alphabet[] = 'all';
-    
+
     // Check to see if this query is cached. If it is, then just pull our results set
     // from it so that things can move quickly through here. We're caching in the event
     // the view has a very large result set.
@@ -112,11 +118,11 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       // it to short-circuit certain conditions that may exist and make any alterations.
       // This is not the most elegant of solutions, but it is very effective.
       $query_parts = explode("\n", $this->options['query']);
-      
-      // Get the base field. This will change depending on the type of view we are 
+
+      // Get the base field. This will change depending on the type of view we are
       // putting the paginator on.
       $base_field = $this->view->base_field;
-    
+
       // If we are dealing with a substring, then short circuit it as we are most likely
       // dealing with a glossary contextual filter.
       foreach ($query_parts as $k => $part) {
@@ -125,7 +131,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
           $query_parts[$k] = $part;
         }
       }
-    
+
       // Evaluate the last line looking for anything which may limit the result set as we
       // need results against the entire set of data and not just what is configured in
       // the view.
@@ -133,7 +139,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       if (substr($last_line, 0, 5) != "LIMIT") {
         $query_parts[] = $last_line;
       }
-    
+
       // Construct the query from the array and change the single quotes from HTML special
       // characters back into single quotes.
       $query = join("\n", $query_parts);
@@ -149,16 +155,16 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       while($idata = $result->fetchObject()) {
         $nids[] = $idata->$base_field;
       }
-          
+
       // Initialize our results array with the FALSE state so each is disabled by default.
       $has_results = array();
       foreach ($alphabet as $letter) {
         $has_results[$letter] = FALSE;
       }
-    
+
       // If we have nodes (which .... well we should), then get the distinct first letter
       // from our field tables and mark them as TRUE so their letters link up. Note that
-      // the node title is a special case that we have to take from the node table as 
+      // the node title is a special case that we have to take from the node table as
       // opposed to the body or any custom fields.
       if (count($nids) > 0) {
         switch ($this->options['paginate_view_field']) {
@@ -168,38 +174,47 @@ class alpha_pagination_handler_pagination extends views_handler_area {
             $where = 'nid';
             break;
           default:
-            $field = $this->options['paginate_view_field'] . '_value';
-            $table = 'field_data_' . $this->options['paginate_view_field'];
+            if (strpos($this->options['paginate_view_field'], ':') === FALSE) {
+              // Format field name and table for single value fields
+              $field = $this->options['paginate_view_field'] . '_value';
+              $table = 'field_data_' . $this->options['paginate_view_field'];
+            } else {
+              // Format field name and table for compound value fields
+              $field = str_replace(':', '_', $this->options['paginate_view_field']);
+              $field_name_components = explode(':', $this->options['paginate_view_field']);
+              $table = 'field_data_' . $field_name_components[0];
+            }
             $where = 'entity_id';
             break;
         }
-        $result = db_query('SELECT DISTINCT(SUBSTR(' . $field . ', 1, 1)) AS letter 
-                            FROM {' . $table . '} 
+        $result = db_query('SELECT DISTINCT(SUBSTR(' . $field . ', 1, 1)) AS letter
+                            FROM {' . $table . '}
                             WHERE ' . $where . ' IN ( :nids )', array(':nids' => $nids));
         while($idata = $result->fetchObject()) {
           $has_results[strtoupper($idata->letter)] = TRUE;
         }
-        
         // Set the cache with the results of our efforts.
         cache_set('alpha_pagination:' . md5($this->options['query']), $has_results, 'cache', CACHE_TEMPORARY);
       }
     }
-    
-    // Create links for each letter that exists in our query above, or just an unlinked
-    // letter for the ones that do not.
-    $output_array = array();
-    foreach ($alphabet as $letter) {
-      if ($letter == 'all' || $has_results[$letter] == TRUE) {
-        $output_array[] = '<a class="alphabetic-paginator-letter-link" href="/' . $this->options['pre_letter_path']. '/' . $letter . '">' . $letter . '</a>';
-      }
-      else {
-        $output_array[] = '<span class="alphabetic-paginator-letter">' . $letter . '</span>';
-      }
+
+    $elements = array('paginator' => array(
+      '#type' => 'container',
+      '#attributes' => array('class' => 'alpha_pagination'),
+    ));
+
+    $items = array();
+    foreach ($alphabet as $pager_option) {
+      $items[] = $pager_option === 'all' || $has_results[$pager_option] === TRUE ?
+        l(t(ucfirst($pager_option)), sprintf('%s/%s', $this->options['pre_letter_path'], $pager_option)) :
+        $pager_option;
     }
-    $output = join(' | ', $output_array);
-    
-    // Wrap this in a div so that the elements in it can be styled.
-    $html = '<div id="alphabetic-paginator">' . $output . '</div>';      
-    return $html;
+
+    $elements['paginator'][] = array(
+      '#theme' => 'item_list',
+      '#items' => $items,
+    );
+
+    return drupal_render($elements);
   }
 }
