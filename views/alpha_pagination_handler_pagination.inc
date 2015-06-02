@@ -201,6 +201,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     $elements = array('paginator' => array(
       '#type' => 'container',
       '#attributes' => array('class' => 'alpha_pagination'),
+      '#attached' => array('css' => array(drupal_get_path('module', 'alpha_pagination') . '/css/alpha_pagination.css' => array('group' => CSS_THEME))),
     ));
 
     $items = array();
