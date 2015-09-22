@@ -5,7 +5,7 @@ The Alpha Pagination for Views module enables you to add an alphabetical menu in
 
 Alpha Pagination for Views was designed and written by Michael Bagnall: https://www.drupal.org/u/elusivemind.
 
-This module exists thanks to the support of the Institute for the Arts and Humanities and UNC and was created as part of the Symposiac Conference Platform.
+This module exists thanks to the support of Highwire Press, Inc and the Institute for the Arts and Humanities and UNC and was created as part of the Symposiac Conference Platform.
 
 
 Dependencies
