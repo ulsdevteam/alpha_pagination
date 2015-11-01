@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Definition of alpha_pagination_handler_pagination.
  *
  * @author Michael R. Bagnall
@@ -63,7 +64,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
   function options_submit(&$form, &$form_state) {
     cache_clear_all('alpha_pagination:*', 'cache', TRUE);
   }
-  
+
   /**
    * Our options form.
    */
@@ -230,7 +231,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       foreach ($alphabet as $letter) {
         $has_results[$letter] = FALSE;
       }
-      
+
       // If we have nodes (which .... well we should), then get the distinct first letter
       // from our field tables and mark them as TRUE so their letters link up. Note that
       // the node title is a special case that we have to take from the node table as
@@ -274,11 +275,17 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     ));
 
     $items = array();
+    
+    // Account for an argummentless call to the page.
+    if (empty($this->view->args)) {
+      $this->view->args[0] = 'all';
+    }
+    
     foreach ($alphabet as $pager_option) {
       // Check to see if current element is active and selected
-      $item_class = ((string)$pager_option == (string) $this->view->args[0]) ? $this->options['paginate_active_class'] : '';
+      $item_class = ((string) $pager_option == (string) $this->view->args[0]) ? $this->options['paginate_active_class'] : '';
       $inactive_item = $this->options['paginate_inactive_class'];
-      
+
       if (strtolower($pager_option) == 'all' || $has_results[$pager_option] === TRUE) {
         $items[] = array(
           'data' => l(t(ucfirst($pager_option)), sprintf('%s/%s', $this->options['pre_letter_path'], $pager_option)),
@@ -292,7 +299,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
         );
       }
     }
-    
+
     // Classes
     $pagination_classes = explode(' ', $this->options['paginate_class']);
     foreach ($pagination_classes as &$class) {

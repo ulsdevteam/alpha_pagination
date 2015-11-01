@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Set up our views hook data.
+ */
+
+/**
  * Implements hook_views_data().
  */
 function alpha_pagination_views_data() {

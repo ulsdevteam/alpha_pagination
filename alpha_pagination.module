@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Controls access to our view and administrative settings.
  *
  * @author Michael R. Bagnall
@@ -12,8 +13,7 @@
  * Copyright (c) 2015 FlyingFlip Studios, LLC.
  * This software is open-source licensed under the GNU Public License Version 2 or later
  * The full license is available in the LICENSE.TXT file at the root of this repository
- */ 
- 
+ */
 /**
  * Implements hook_views_api().
  */
@@ -27,7 +27,6 @@ function alpha_pagination_views_api() {
 /**
  * Implements hook_node_presave().
  */
-function alpha_pagination_node_presave($entity, $type) {
+function alpha_pagination_node_presave($entity) {
   cache_clear_all('alpha_pagination:*', 'cache', TRUE);
 }
-  
