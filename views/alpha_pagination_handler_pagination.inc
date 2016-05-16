@@ -92,7 +92,8 @@ class alpha_pagination_handler_pagination extends views_handler_area {
             $compound_field_field_name = sprintf('%s:%s', $field_name, $compoundFieldKey);
             $fields[$compound_field_field_name] = $compound_field_field_name;
           }
-        } else {
+        } 
+        else {
           $fields[$field_name] = $field_name;
         }
       }
@@ -175,6 +176,14 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     else {
       $alphabet = range('A', 'Z');
     }
+
+    // Add arabic alphabet when website's language is in arabic
+    global $language;
+
+    if ($language->language == 'ar') {
+      $alphabet = array('ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','و','ه','ي');
+    }
+
     $alphabet[] = 'all';
 
     // Check to see if this query is cached. If it is, then just pull our results set
@@ -248,7 +257,8 @@ class alpha_pagination_handler_pagination extends views_handler_area {
               // Format field name and table for single value fields
               $field = $this->options['paginate_view_field'] . '_value';
               $table = 'field_data_' . $this->options['paginate_view_field'];
-            } else {
+            } 
+            else {
               // Format field name and table for compound value fields
               $field = str_replace(':', '_', $this->options['paginate_view_field']);
               $field_name_components = explode(':', $this->options['paginate_view_field']);
@@ -275,12 +285,12 @@ class alpha_pagination_handler_pagination extends views_handler_area {
     ));
 
     $items = array();
-    
+
     // Account for an argummentless call to the page.
     if (empty($this->view->args)) {
       $this->view->args[0] = 'all';
     }
-    
+
     foreach ($alphabet as $pager_option) {
       // Check to see if current element is active and selected
       $item_class = ((string) $pager_option == (string) $this->view->args[0]) ? $this->options['paginate_active_class'] : '';

@@ -14,6 +14,7 @@
  * This software is open-source licensed under the GNU Public License Version 2 or later
  * The full license is available in the LICENSE.TXT file at the root of this repository
  */
+ 
 /**
  * Implements hook_views_api().
  */
