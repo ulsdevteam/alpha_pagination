@@ -35,10 +35,15 @@ Views Integration and Configuration
 4) Configure how you want alpha_pagination to work and specify where it should appear:
   a) set the path to the results view page.
   b) select the field you want to use as the basis for the alphabetic grouping from the options presented in the select list (note: if the field you want to use does not appear, go back and add it to your view and then return to this configuration page to select the field).
-  
-  c) add a context that is the same as the field you wish to use as the basis for alphabetic sorting. Be sure to enable Glossary mode and set the character limit to 1. The transform case option on the URL should be set to Upper Case.
+  c) add a contextual filter that is the same as the field you wish to use as the basis for alphabetic sorting. Be sure to enable Glossary mode and set the character limit to 1. The transform case option on the URL should be set to Upper Case. Also be sure this is the value item for the field and not something else like formatter.
   d) by default the alpha pagination will apply to all displays; if you only want the alpha pagination to appear on the current display, use the drop-down menu at the top of the administrative interface to change the setting from "All displays" to "This page (override)".
 
-
-
 5) An optional sample view is included and can be enabled via the alpha_pagination_example view. The sample relies on the 'article' default content type. You can create sample content using the devel module or rely on your own data.
+
+Credits:
+--------
+https://www.drupal.org/node/2664344
+Additional styles & configuration options by MarkCarver: (https://www.drupal.org/u/markcarver)
+
+https://www.drupal.org/node/2654274
+Arabic Letter Support by Jad Sayegh: (https://www.drupal.org/u/jadsay)
