@@ -9,21 +9,35 @@
 }
 
 .alpha-pagination ul > li {
-  border-bottom: 1px solid #ff0000;
-  border-top: 1px solid #ff0000;
   display: inline;
   list-style: outside none none;
-  margin: 0 -4px 0 0;
-  padding: 2px 6px 2px 5px;
+  margin: 0 5px 0 5px;
+  padding: 0;
   text-align: center;
+  font-size: larger;
+}
+
+.alpha-pagination ul > li a {
+  padding: 2px 6px 2px 5px;
 }
 
 .alpha-pagination ul > li:first-child {
-    border-left: 1px solid #FF0000;
 }
 
 .alpha-pagination ul > li:last-child {
-    border-right: 1px solid #FF0000;
+}
+
+.alpha-pagination li.inactive {
+  display: none;
+}
+
+.alpha-pagination li:hover {
+  background-color: #039;
+  color: #FFF;
+}
+
+.alpha-pagination li a:hover {
+  color: #FFF;
 }
 
 .alpha-pagination ul > li.active a {

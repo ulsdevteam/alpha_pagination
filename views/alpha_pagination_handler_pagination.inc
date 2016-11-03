@@ -282,18 +282,24 @@ class alpha_pagination_handler_pagination extends views_handler_area {
    * I am open to suggestions on how to make this better.
    */
   function post_execute(&$values) {
-    $query = $this->view->build_info['query'];
-    $quoted = $query->getArguments();
-    $connection = Database::getConnection();
-    foreach ($quoted as $key => $val) {
-      if (is_array($val)) {
-        $quoted[$key] = implode(', ', array_map(array($connection, 'quote'), $val));
-      }
-      else {
-        $quoted[$key] = $connection->quote($val);
-      }
+    if (get_class($this->view->query) == 'islandora_solr_views_query') {
+      $this->options['query'] = NULL;
     }
-    $this->options['query'] = check_plain(strtr($query, $quoted));
+    else {
+      $query = $this->view->build_info['query'];
+      $quoted = $query->getArguments();
+
+      $connection = Database::getConnection();
+      foreach ($quoted as $key => $val) {
+        if (is_array($val)) {
+          $quoted[$key] = implode(', ', array_map(array($connection, 'quote'), $val));
+        }
+        else {
+          $quoted[$key] = $connection->quote($val);
+        }
+      }
+      $this->options['query'] = check_plain(strtr($query, $quoted));
+    }
   }
 
   /**
@@ -329,6 +335,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
   $items = array();
   foreach ($this->getItems() as $key => $is_link) {
      $all = drupal_strtolower($key) === 'all';
+     $wildcard_for_solr = (!$all && get_class($this->view->query) == 'islandora_solr_views_query') ? '*' : '';
      $numeric = is_numeric($key);
      $active = (string) $key === (string) $this->view->args[0];
      $is_link = !$active && ($all || $is_link);
@@ -339,7 +346,7 @@ class alpha_pagination_handler_pagination extends views_handler_area {
        $item_data = array(
          '#theme' => 'link__alpha_pagination__' . drupal_html_class($key),
          '#text' => $label,
-         '#path' => sprintf('%s/%s', $this->options['pre_letter_path'], $key),
+         '#path' => sprintf('%s/%s' . $wildcard_for_solr, $this->options['pre_letter_path'], $key),
          '#options' => array(
            'attributes' => array(),
            'html' => FALSE
@@ -532,7 +539,8 @@ class alpha_pagination_handler_pagination extends views_handler_area {
   protected function getEntityPrefixes() {
     $prefixes = array();
 
-    if ($entity_ids = $this->getEntityIds()) {
+    $entity_ids = $this->getEntityIds();
+    if (get_class($this->view->query) <> 'islandora_solr_views_query') {
       switch ($this->options['paginate_view_field']) {
         case 'title':
           $table = $this->view->base_table;
@@ -564,6 +572,14 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       while ($data = $result->fetchObject()) {
         $prefixes[] = is_numeric($data->prefix) ? $data->prefix : drupal_strtoupper($data->prefix);
       }
+    } elseif (get_class($this->view->query) == 'islandora_solr_views_query') {
+      // the view field will always use the fgs_label_s "title" field
+      foreach ($entity_ids as $entity_id) {
+        $prefix = (is_numeric($entity_id[0]) ? $entity_id[0] : drupal_strtoupper($entity_id[0]));
+        if (array_search($prefix, $prefixes) === FALSE) {
+          $prefixes[] = $prefix;
+        }
+      }
     }
     return array_unique(array_filter($prefixes));
   }
@@ -579,6 +595,9 @@ class alpha_pagination_handler_pagination extends views_handler_area {
    *   An indexed array of entity identifiers.
    */
   protected function getEntityIds () {
+    if (get_class($this->view->query) == 'islandora_solr_views_query') {
+      return $this->solr_getEntityIds();
+    }
     $query_parts = explode("\n", $this->options['query']);
 
     // Get the base field. This will change depending on the type of view we
@@ -618,5 +637,21 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       $entity_ids[] = $data->$base_field;
     }
     return $entity_ids;
-  } 
+  }
+
+  /**
+   * This will handle the query to return EntityIds in cases when the query is a Solr query.
+   */
+  protected function solr_getEntityIds() {
+    // need to write a query that gets all items -- not just limited by the # of items per page (default only 10 items)
+    $this->view->query->pager->options['items_per_page'] = $this->view->query->pager->total_items;
+    $this->view->query->execute($this->view);
+
+    $entity_docs = $this->view->query->islandora_solr_response['response']['objects'];
+    $entity_ids = array();
+    foreach ($entity_docs as $k=>$entity_doc) {
+      $entity_ids[] = $entity_doc['solr_doc']['fgs_label_s'];
+    }
+    return $entity_ids;
+  }
 }
