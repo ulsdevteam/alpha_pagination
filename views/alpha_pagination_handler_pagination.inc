@@ -475,8 +475,6 @@ class alpha_pagination_handler_pagination extends views_handler_area {
       $items = array('ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','و','ه','ي');
     }
     
-    $items[] = 'all';
-
     // Append or prepend numeric items.
     if ($this->options['paginate_view_numbers']) {
       if ($this->options['paginate_numeric_position'] === 'after') {
