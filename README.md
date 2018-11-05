@@ -20,6 +20,6 @@ This module exhibits an issue with caching that has been very difficult to debug
 
 ## Author / License
 
-Written by Brian Gillingham for the [University of Pittsburgh](http://www.pitt.edu).  Copyright (c) University of Pittsburgh.
+Written by [Willow Gillingham](https://github.com/bgilling) for the [University of Pittsburgh](http://www.pitt.edu).  Copyright (c) University of Pittsburgh.
 
 Released under a license of GPL v2 or later.
